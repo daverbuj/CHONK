@@ -77,5 +77,62 @@ All male genotypes are unknown on chrX for the union deletions
 
 Papers:
 
+[CNVnator: Abyzov et al. 2011](https://genome.cshlp.org/content/21/6/974.short)
+[Duphold: Pedersen et al. 2018](https://www.biorxiv.org/content/early/2018/11/08/465385.full.pdf)
+
+#### Features
+
+* doc_fc
+  * fold-change for the variant depth relative to the rest of the chromosome the variant was found on
+* doc_gc
+  * fold-change for the variant depth relative to bins in the genome with similar GC-content.
+* doc_flank
+  * fold-change for the variant depth relative to flanking regions.
+
+* doc_mad
+  * fold-change for the variant median absolute deviation (MAD) of depth relative to the MAD for the rest of the chromosome
+* doc_mad_gc
+  * fold-change for the variant MAD of depth to bins in the genome with similar GC-content
+* doc_mad_flank
+  * fold-change for the variant MAD of depth to MAD bins in flanking regions.
+
+#### Defintions
+
+* depth of coverage:
+  * *number_of_reads* * *average_read_length* / *base-pairs parsed*
+  * for example. chr1:1-300 DEL. 20 reads * 150bp / 300bp = 10X
+
+* (median absolute deviation)[https://en.wikipedia.org/wiki/Median_absolute_deviation]
+
+* fold-change
+  * take the depth of coverage of the variant and divide it by the chromosome or bins
+
+* GC-content: the fraction of GC nucleotides for a given region, like 0.65 
+
+* bins
+  * experiment with bin sizes. read the methods of CNVnator. Recommend 100bp, 500bp, or 1kbp
+
+* flank
+  * experiment with flanking sizes: 500bp or 1kbp
+
+#### Tips
+
+To calculate GC content, use the `bedtools nuc` command or use `samtools faidx` and count it yourself (the latter is likely to be faster)
+
+You only need to calculate the chromosome coverage and binned coverage once. Save the data in a `metadata.txt` file that can be read when
+extracting features again. To make this step run faster, build the null distribution of coverage in regions that are intolerant to copy
+number variants. `cn2.masked.bed`
+
+For the null model:
+  * chromosome depth of coverage
+  * chromosome MAD of coverage in bins
+  * median (or mean see if there is a significant difference) coverage in bins at different GC content
+  * MAD of coverage in bins at different GC content
+
+For the null model you should check the coverage only within regions intolerant to copy number change. 
+For you should try to have at least 500 bins at each GC content but no more than 1000 to save computation time. 
+
+
+
 
 
