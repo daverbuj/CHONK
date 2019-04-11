@@ -102,7 +102,9 @@ The first three features are taken from the duphold program. If you can install 
   * SV doc:
     * same thing, but now you just do the SV region. You don't have to recalculate the average read length  
     * `for Aln in bam.fetch(reference=chrom, start=SV_start, end=SV_end): read_length.append(Aln.reference_length)`
-    
+    * SV doc = *L* X *N* / *SV length*
+  * doc_fc = SV doc / chromosome doc
+  
 * doc_gc
   * fold-change for the variant depth relative to bins in the genome with similar GC-content.
 * doc_flank
@@ -152,6 +154,24 @@ For the null model:
 For the null model you should check the coverage only within regions intolerant to copy number change. 
 For you should try to have at least 500 bins at each GC content but no more than 1000 to save computation time. 
 
+##### Exploring the Data
+
+You can make plots like histograms and look at the distribution of features with respect to genotype
+
+````
+doc    sample   geno
+1.2    HG000096  0/0
+0.5    HG000096  0/1
+0.01   HG000096  1/1
+````
+
+```
+import seaborn as sns
+import pandas as pd
+df = pd.read_table("...")
+sns.violinplot(y="doc",x="geno",data=df) 
+```
+https://seaborn.pydata.org/api.html#categorical-plots
 
 
 
