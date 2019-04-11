@@ -39,6 +39,14 @@ Phase 3 SV calls from 2,504 low-coverage genomes ([Sudmant et al. 2015](https://
 /projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/platinumgenomes.sv.v8.vcf
 ```
 
+In the BED files: 
+* 0-base
+* The genotypes will be your training labels
+  * 0|0 = 0
+  * 0/1 (1/0) = 1
+  * 1/1 = 2
+
+
 From the README:
 ```
 Here are some basic statistics about the structural variant call set.
