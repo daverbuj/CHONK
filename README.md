@@ -90,8 +90,19 @@ Papers:
 
 #### Features
 
+The first three features are taken from the duphold program. If you can install it, you can compare your estimates with dupold. 
+
 * doc_fc
   * fold-change for the variant depth relative to the rest of the chromosome the variant was found on
+  * chromosome doc:
+    * determine the average read length (you can do this once) = *L*
+    * count the reads (readname + mate_1 similar to your split-read code) = *N*
+    * count the number of base-pairs you scan = *G*
+    * chromosome doc = *L* X *N* / *G* 
+  * SV doc:
+    * same thing, but now you just do the SV region. You don't have to recalculate the average read length  
+    * `for Aln in bam.fetch(reference=chrom, start=SV_start, end=SV_end): read_length.append(Aln.reference_length)`
+    
 * doc_gc
   * fold-change for the variant depth relative to bins in the genome with similar GC-content.
 * doc_flank
@@ -133,6 +144,7 @@ number variants. `cn2.masked.bed`
 
 For the null model:
   * chromosome depth of coverage
+  * average read length (pysam Aln.reference_length)
   * chromosome MAD of coverage in bins
   * median (or mean see if there is a significant difference) coverage in bins at different GC content
   * MAD of coverage in bins at different GC content
