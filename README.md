@@ -45,7 +45,7 @@ In the BED files:
   * 0|0 = 0
   * 0/1 (1/0) = 1
   * 1/1 = 2
-
+* for now, just focus on chr1-22 (autosomes) 
 
 From the README:
 ```
