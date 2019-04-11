@@ -68,5 +68,14 @@ All male genotypes are unknown on chrX for the union deletions
 ```
 
 ------------
-`
+
+## Features
+[Medvedev et al. 2009](https://www.nature.com/articles/nmeth.1374)
+[Alkan et al. 2011](https://www.nature.com/articles/nrg2958)
+
+### Depth of Coverage
+
+Papers:
+
+
 
