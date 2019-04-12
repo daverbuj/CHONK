@@ -107,6 +107,13 @@ The first three features are taken from the duphold program. If you can install 
   
 * doc_gc
   * fold-change for the variant depth relative to bins in the genome with similar GC-content.
+  * bins sizes: 100bp, 500bp, 1kbp
+  * in the same regions for the null distribution in `doc_fc`, now determine the doc for 500-1000 bins at different GC context
+  * for example, chr1:1-500 , 0.62 GC; doc=0.8. then for all bins at 0.62GC, calculate the median (mean and check if different) 
+    * this median/mean DoC at specific GC context will be used, and save it to a file 
+    * do this for each chromosome
+  * doc_gc = SV_doc  / median doc of the bin with the same GC context (so if the SV has 0.42 GC, you use the 0.42 GC bin) 
+  
 * doc_flank
   * fold-change for the variant depth relative to flanking regions.
 
@@ -142,7 +149,7 @@ To calculate GC content, use the `bedtools nuc` command or use `samtools faidx` 
 
 You only need to calculate the chromosome coverage and binned coverage once. Save the data in a `metadata.txt` file that can be read when
 extracting features again. To make this step run faster, build the null distribution of coverage in regions that are intolerant to copy
-number variants. `cn2.masked.bed`
+number variants. `/projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/cn2.regions.grch37.masked.bed`
 
 For the null model:
   * chromosome depth of coverage
