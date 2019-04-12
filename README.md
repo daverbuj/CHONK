@@ -118,12 +118,23 @@ The first three features are taken from the duphold program. If you can install 
   * fold-change for the variant depth relative to flanking regions.
   * 500bp, 1kbp, 5kbp. I think 1kbp would be good. 
 
+For the MAD features, calculate the "control" coverage in the same bin size. 
+
+MAD = median( abs(median of all bins - each bin depth) ) 
+MAD = median ( (10-5, 10-8, 10-11, 10-12) )
+
+```
+numpy.median([5,2,1,2])
+2.0
+```
 * doc_mad
   * fold-change for the variant median absolute deviation (MAD) of depth relative to the MAD for the rest of the chromosome
+  * keep the same bin size as the bins you use for GC content.
+  * also bin the SV in question. 
+  * trick: you have already calculated the binned coverage making the control for the GC bins
+    * for `doc_mad` you can just calculate the MAD for all GC bins for a chromosome
 * doc_mad_gc
   * fold-change for the variant MAD of depth to bins in the genome with similar GC-content
-* doc_mad_flank
-  * fold-change for the variant MAD of depth to MAD bins in flanking regions.
 
 #### Defintions
 
