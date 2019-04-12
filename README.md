@@ -147,6 +147,16 @@ The first three features are taken from the duphold program. If you can install 
 
 To calculate GC content, use the `bedtools nuc` command or use `samtools faidx` and count it yourself (the latter is likely to be faster)
 
+The command below makes 100bp windows. You only have to do this once and then you can make another file with the chrom:start-end and the GC content 
+```
+bedtools makewindows -w 100 -b /projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/cn2.regions.grch37.masked.bed >cn2.regions.grch37.masked.windowed100bp.bed
+
+bedtools nuc -fi /home/dantakli/ref/human_g1k_v37.fasta -bed cn2.regions.grch37.masked.windowed100bp.bed | cut -f 1-3,5 >cn2.regions.grch37.masked.windowed100bp.gc.bed
+```
+Make sure you round to 2 decimal places. 
+
+
+
 You only need to calculate the chromosome coverage and binned coverage once. Save the data in a `metadata.txt` file that can be read when
 extracting features again. To make this step run faster, build the null distribution of coverage in regions that are intolerant to copy
 number variants. `/projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/cn2.regions.grch37.masked.bed`
@@ -159,7 +169,7 @@ For the null model:
   * MAD of coverage in bins at different GC content
 
 For the null model you should check the coverage only within regions intolerant to copy number change. 
-For you should try to have at least 500 bins at each GC content but no more than 1000 to save computation time. 
+For you should try to have at least 500 bins at each GC content but no more than 1000 to save computation time.
 
 ##### Exploring the Data
 
@@ -180,6 +190,6 @@ sns.violinplot(y="doc",x="geno",data=df)
 ```
 https://seaborn.pydata.org/api.html#categorical-plots
 
-
+Look at the doc_gc distribution with respect to SV length and bin size 
 
 
