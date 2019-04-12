@@ -116,6 +116,7 @@ The first three features are taken from the duphold program. If you can install 
   
 * doc_flank
   * fold-change for the variant depth relative to flanking regions.
+  * 500bp, 1kbp, 5kbp. I think 1kbp would be good. 
 
 * doc_mad
   * fold-change for the variant median absolute deviation (MAD) of depth relative to the MAD for the rest of the chromosome
