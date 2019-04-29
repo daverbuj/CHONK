@@ -8,7 +8,8 @@ import csv
 directory = sys.argv[1] # Here we use the directory with the .bam files
 if directory[-1] != '/':
 	directory = directory + '/' # Check that directory argument given ends with a forwardslash
-cn2_bed = sys.argv[2]
+cn2_bed = sys.argv[2] # cn2.bed file
+output_directory = sys.argv[3] # Directory we want to write meta files to
 
 # Finding the DOC for each chromosome
 	# L (Average read length) == avg_length
@@ -20,7 +21,7 @@ for filename_r in os.listdir(directory): # GENOME
 		bamfile = filename_r
 		genome = bamfile[:7]
 		bamfile_abspath = directory + bamfile
-		filename_abspath_w = directory + genome + '.meta.tsv'
+		filename_abspath_w = output_directory + genome + '.meta.tsv'
 		bam = pysam.AlignmentFile(bamfile_abspath,'r')
 		with open(filename_abspath_w, 'w') as out_file: 
 			tsv_writer = csv.writer(out_file, delimiter='\t')
@@ -44,3 +45,4 @@ for filename_r in os.listdir(directory): # GENOME
 				bp_count = int(str(bp_count_raw)[2:-3])
 				chr_doc = (avg_length * read_count) / bp_count
 				tsv_writer.writerow([chrom, avg_length, chr_doc])
+
