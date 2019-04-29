@@ -9,7 +9,7 @@ if meta_directory[-1] != '/':
 bam_directory = sys.argv[2]
 if bam_directory[-1] != '/':
 	bam_directory = bam_directory + '/'
-sv_bed = sys.argv[2]
+sv_bed = sys.argv[3]
 
 
 # Finding the DOC for each SV
@@ -40,7 +40,7 @@ with open(sv_bed) as tsv:
 			if filename.startswith(sv_genome) and filename.endswith('.bam'):
 				bamfile = filename
 				bamfile_abs_path = bam_directory + bamfile
-				bam = pysam.AlignmentFile(bamfile_abs_path,'r')
+				bam = pysam.AlignmentFile(bamfile_abs_path, 'r', check_sq=False)
 				for Aln in bam.fetch(reference = sv_chrom, start = int(sv_start), end = int(sv_end)):
 					sv_read_count += 1
 		# META (sv_avg_read_length, gen_chrom_doc)
@@ -52,6 +52,6 @@ with open(sv_bed) as tsv:
 						if sv_chrom == gen_chrom_meta[0]:
 							sv_avg_read_length = gen_chrom_meta[1]
 							gen_chrom_doc = gen_chrom_meta[2]
-		sv_doc = (sv_avg_read_length * sv_read_count) / sv_bp_count
-		doc_fc = sv_doc / gen_chrom_doc
+		sv_doc = (float(sv_avg_read_length) * sv_read_count) / sv_bp_count
+		doc_fc = sv_doc / float(gen_chrom_doc)
 		print(sv_type, sv_genotype, doc_fc, sv_doc, sv_start, sv_end)
