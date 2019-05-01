@@ -1,0 +1,16 @@
+MANIFEST.in
+README
+setup.py
+chonk/Alignment.py
+chonk/Argument.py
+chonk/Backend.py
+chonk/Bam.py
+chonk/Breakpoint.py
+chonk/Splitread.py
+chonk/__init__.py
+chonk/chonk
+chonk/chonk.py
+chonk.egg-info/PKG-INFO
+chonk.egg-info/SOURCES.txt
+chonk.egg-info/dependency_links.txt
+chonk.egg-info/top_level.txt

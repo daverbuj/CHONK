@@ -1,0 +1,1 @@
+python setup.py sdist && pip uninstall chonk -y && pip install dist/chonk-0.0.1.tar.gz
