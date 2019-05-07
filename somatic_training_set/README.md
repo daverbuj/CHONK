@@ -53,6 +53,8 @@ This is a BED file and it is formatted as such,
 
 You are likely familiar with genotypes formatted like this, `0/1`. The `|` indicates the variants are phased, meaning we know which chromosome (maternal or paternal) the variant is on. 
 
+**SKIP chrX SVs!**
+
 So `1|0` and `0|1` are both heterozygous mutations. While `1|1` is a homozygous mutation.
 
 For the DUPs with `2` in the genotype (such as `0|2` or `2|2`), treat the 2 allele as a 1; so `0|2` is heterozygous and `2|2` is homozygous
