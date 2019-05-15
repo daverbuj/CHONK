@@ -45,6 +45,11 @@ Two samples (HG03006 and NA19239) have a deletion at `1:766599-769112` the remai
 
 ##### Variables for Training Features
 
+*Training Features:
+  * Ratio of Unique K-mers to Total K-mers from reads
+    * Left breakpoint
+    * Right breakpoint
+
 Please please experiment with these! Have fun :joy:
 
 * k-mer length
@@ -53,7 +58,10 @@ Please please experiment with these! Have fun :joy:
   * the bigger the *k* the more k-mers you will have (and thus more memory will be consumed)
 
 * Hamming distance
-  * this is a measure of how 
+  * this is a measure of how two strings are different
+  * For example: ATGC vs ATGA have a Hamming distance of 1.
+  * We want to exclude k-mers that match very closely to the Reference
+  * test different thresholds of Hamming distance `[4,5,6, ... 10,11,12]` 
 
 * `SA` tags
   * test reads with/without `SA` tags
@@ -62,5 +70,21 @@ Please please experiment with these! Have fun :joy:
 * Soft clips
   * test reads with/without soft clips
   * use `if 'S' in Aln.cigarstring` to find them
+
+* Flanking sequence
+  * this is the number of base pairs to search for reads
+  * try `[50, 100, 150, 200, 250, 500, 1000]`
+
+-----------------------
+
+#### Code
+
+```
+
+```
+
+
+
+
 
 
