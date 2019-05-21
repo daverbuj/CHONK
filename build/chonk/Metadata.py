@@ -37,6 +37,8 @@ def metadataExtraction(Args):
 			cn2_chrom = cn2_loc[0]
 			if 'chr' in chrom and 'chr' not in cn2_chrom:
 				cn2_chrom = 'chr' + cn2_chrom
+			elif 'chr' not in chrom and 'chr' in cn2_chrom:
+				cn2_chrom.replace('chr','')
 			cn2_start = cn2_loc[1]
 			cn2_end = cn2_loc[2]
 			if chrom == cn2_chrom:
