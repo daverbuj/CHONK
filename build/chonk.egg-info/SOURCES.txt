@@ -1,11 +1,12 @@
 MANIFEST.in
-README
 setup.py
 chonk/Alignment.py
 chonk/Argument.py
 chonk/Backend.py
 chonk/Bam.py
 chonk/Breakpoint.py
+chonk/DiscordantPE.py
+chonk/Metadata.py
 chonk/Splitread.py
 chonk/__init__.py
 chonk/chonk
