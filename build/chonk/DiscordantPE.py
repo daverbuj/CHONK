@@ -3,7 +3,7 @@ import sys, pysam, os, csv
 
 def discordantpe(Aln, meta, chrom):
 
-	# convert the metadata tsv file to a dict
+	# convert the metadata tsv file to local variables
 	with open(meta) as tsv:
 		for metadata in csv.reader(tsv, dialect="excel-tab"):
 			med_mpd = metadata[3]
