@@ -4,7 +4,7 @@ import chonk.Backend as Backend
 import pysam, sys, csv
 import numpy as np
 
-# Extracting average read length and depth of coverage across chromosome
+# Extracting average read length and depth of coverage across chromosome ~~~~~~ I HAVENT INCORPORATED THIS IN YET
 def doc():
 	read_lengths_raw = [] # Compiles read_length of all reads in the chromosome
 	read_count = 0 # Counts up each read in the chromosome
