@@ -50,12 +50,14 @@ class Argument():
 		"""
 		_help = """
 
-    chonk  breakpoints  -i <bam> -r <chromosome> -o <output prefix>
+    chonk  breakpoints  -i <bam> -m <meta> -r <chromosome> -o <output prefix>
 
 		"""
 		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=_help, add_help=False)
 		# bam file
 		parser.add_argument('-i',type=str, required=True,default=None)
+		# meta file
+		parser.add_argument('-m',type=str, required=True,default=None)
 		# chromosome
 		parser.add_argument('-r',type=str,required=True,default=None)
 		parser.add_argument('-o',type=str,required=False,default=None)
@@ -74,9 +76,29 @@ class Argument():
 	def metadata(self):
 		"""
 		subcommand to get the metadata for a bam file
+
 		"""
 		_help = """
-    chonk metadata -i <bam> -r <chromosome> -o <output prefix> -x <exclude region>
+
+    chonk metadata -i <bam> -c <cn2> -r <chromosome> -o <output prefix> -x <exclude region>
 		
 		"""
-
+		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=_help, add_help=False)
+		# bam file
+		parser.add_argument('-i',type=str, required=True,default=None)
+		# CN2 .bed file
+		parser.add_argument('-c',type=str, required=True,default=None)
+		# chromosome
+		parser.add_argument('-r',type=str,required=True,default=None)
+		parser.add_argument('-o',type=str,required=False,default=None)
+		parser.add_argument('-h', '-help', required=False, action="store_true", default=False)
+		args = parser.parse_args(sys.argv[2:])
+		if args.h == True:
+			sys.stderr.write(_help+'\n')
+			sys.exit(1)
+		if args.o == None:
+			args.o = '{}.{}.chonk.sv.bed'.format(
+				args.i.replace('.bam','').replace('.sam','').replace('.cram',''),
+				args.r
+				)
+		return args

@@ -54,7 +54,7 @@ class Alignment():
 		# of pysam functions.
 
 		self.chrom = Aln.reference_name
-		self.lpos = Aln.reference_start+1 #Aln.reference_start is in 0-base
+		self.lpos = Aln.reference_start #Aln.reference_start is in 0-base
 		self.rpos = Aln.reference_end
 		if Aln.is_reverse: self.strand = '-'
 		self.mapq = Aln.mapping_quality
@@ -62,10 +62,10 @@ class Alignment():
 		
 	def secondary_alignment(self,sa_list=None):
 		# populate the Alignment attributes for the
-		# secondary alignment lpos is 1-based
+		# secondary alignment lpos is 0-based
 	
 		self.chrom = sa_list[0]
-		self.lpos = int(sa_list[1])
+		self.lpos = int(sa_list[1])-1
 		self.strand = sa_list[2]
 		self.mapq = int(sa_list[4])
 

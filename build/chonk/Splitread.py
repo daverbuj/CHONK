@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from chonk.Alignment import Alignment
-import operator, pysam, sys 
+import operator, pysam
 
 # class of split-aln
 
@@ -61,6 +61,6 @@ def splitread(Aln,s_alns,chrom):
 			breakpoint_start, breakpoint_end = right.lpos, left.rpos
 			svtype = 'DUP'
 
-		breaks.append( [chrom,breakpoint_start,breakpoint_end,svtype] )
+		breaks.append( (chrom,breakpoint_start,breakpoint_end,svtype) )
 
 	return breaks
