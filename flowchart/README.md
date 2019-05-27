@@ -26,14 +26,20 @@ This step will perform the following steps:
 1. Inverse Excluded Regions
 
 > user will provide an exclude file, if not use the entire lengths of the chromosome found in the BAM header
-> using the lengths of the chromosomes, make a temporary BED file of the starts and ends of the chromosomes and subtract the excluded regions from them
+
+> using the lengths of the chromosomes, make a temporary BED file of the starts and ends of the chromosomes 
+and subtract the excluded regions from them
+
 > with the new "un-excluded" regions, retain regions >10kb and window them 100bp and 1kbp sliding windows
+
 > calculate the GC content of the bins and save them to a temporary file
+
 > the "un-excluded" file (original and windowed) will be used in all steps but genotyping 
 
 2. Coverage Metadata
 
 > calculate the mean coverage and standard deviation for each chromosome
+
 > calculate the mean coverage and standard deviation for each windowed region (100bp & 1kbp) with respect to GC content
 
 3. Template Length Metadata
