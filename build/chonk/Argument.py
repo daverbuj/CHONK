@@ -80,14 +80,18 @@ class Argument():
 		"""
 		_help = """
 
-    chonk metadata -i <bam> -c <cn2> -r <chromosome> -o <output prefix> -x <exclude region>
+    chonk metadata -i <bam> -e <mask> -f <fasta> -g <genome name> -r <chromosome> -o <output prefix> -x <exclude region>
 		
 		"""
 		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=_help, add_help=False)
 		# bam file
 		parser.add_argument('-i',type=str, required=True,default=None)
-		# CN2 .bed file
-		parser.add_argument('-c',type=str, required=True,default=None)
+		# mask .bed file
+		parser.add_argument('-e',type=str, required=True,default=None)
+		# fasta
+		parser.add_argument('-f',type=str, required=True,default=None)
+		# genome name
+		parser.add_argument('-g',type=str, required=True,default=None)
 		# chromosome
 		parser.add_argument('-r',type=str,required=True,default=None)
 		parser.add_argument('-o',type=str,required=False,default=None)
@@ -97,7 +101,7 @@ class Argument():
 			sys.stderr.write(_help+'\n')
 			sys.exit(1)
 		if args.o == None:
-			args.o = '{}.{}.chonk.sv.bed'.format(
+			args.o = '{}.{}.metadata.chonk.json'.format(
 				args.i.replace('.bam','').replace('.sam','').replace('.cram',''),
 				args.r
 				)

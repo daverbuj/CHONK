@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-import sys, pysam, os, csv
+import sys, pysam, os, json
 
 def discordantpe(Aln, meta, chrom):
 
-	# convert the metadata tsv file to local variables
-	with open(meta) as tsv:
-		for metadata in csv.reader(tsv, dialect="excel-tab"):
-			med_mpd = metadata[3]
-			mad = metadata[4]
+	# convert the metadata tsv file to a dict
+	with open(meta) as json_file:
+		data = json.load(json_file)
+		metadata = data[0]
+		med_mpd = metadata[4]
+		mad = metadata[5]
 
 	# looking through bam 
 	if (Aln.is_paired # Read is Paired
