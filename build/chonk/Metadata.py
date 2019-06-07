@@ -17,8 +17,6 @@ def metadataExtraction(Args):
 	genome = Args.g
 	# ensure the chromosome prefix matches the one in the aln file
 	chrom = Backend.check_chrom(Args.r,AlnFile.chrom_flag)
-	# output file
-	output_file = Args.o
 
 	# Create temporary files used to extract metadata
 	# * Create genome chromosomal region bed file: chrom_bed = 'cwd/genome.chr.CHONKdel.bed'
@@ -162,7 +160,7 @@ def metadataExtraction(Args):
 	metadata = (chr_metadata, gc_metadata)
 
 	# Export chrom_metadata and gc_metadata as JSON file
-	meta_json = '{}.{}.metadata.chonk.json'.format(genome, chrom)
+	meta_json = '{}.metadata.chonk.json'.format(Args.o)
 	with open(meta_json, 'w') as json_outfile:
 		json.dump(metadata, json_outfile)
 		json_outfile.close()

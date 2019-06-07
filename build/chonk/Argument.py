@@ -50,16 +50,14 @@ class Argument():
 		"""
 		_help = """
 
-    chonk  breakpoints  -i <bam> -m <meta> -r <chromosome> -o <output prefix>
+    chonk breakpoints -i <bam> -m <meta> -o <output prefix.>
 
 		"""
 		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=_help, add_help=False)
-		# bam file
+		# bam file (This is not necesarry since bam file could be included in metadata)
 		parser.add_argument('-i',type=str, required=True,default=None)
 		# meta file
 		parser.add_argument('-m',type=str, required=True,default=None)
-		# chromosome
-		parser.add_argument('-r',type=str,required=True,default=None)
 		parser.add_argument('-o',type=str,required=False,default=None)
 		parser.add_argument('-h', '-help', required=False, action="store_true", default=False)
 		args = parser.parse_args(sys.argv[2:])

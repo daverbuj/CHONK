@@ -3,7 +3,7 @@ from chonk.Bam import Bam
 import chonk.Backend as Backend
 import chonk.Splitread as Splitread
 import chonk.DiscordantPE as DiscordantPE
-import pysam
+import pysam, json
 
 def breakpoints(Args):
 	"""
@@ -12,18 +12,21 @@ def breakpoints(Args):
 	
 	# check if alignment file exists
 	AlnFile = Bam(Args.i)
-	# ensure the chromosome prefix matches the one in the aln file
-	chrom = Backend.check_chrom(Args.r,AlnFile.chrom_flag)
-
 	# metadata file
 	meta = Args.m
-
+	# chromosome from meta file
+	with open(meta) as json_file:
+		data = json.load(json_file)
+		metadata = data[0]
+		chrom = metadata[1]
 	# output file
 	out = open(Args.o,'w')
 	out.write('#chrom\tstart\tend\tsvtype\n')
 
 	processed_reads=[]
 	for Aln in AlnFile.bam.fetch(region=chrom):
+		# skip reads with mapping quality of 0
+		if Aln.mapq == 0: continue 
 		
 		# split-read
 		s_alns = Splitread.get_split(Aln)

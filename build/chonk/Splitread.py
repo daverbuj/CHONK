@@ -48,19 +48,25 @@ def splitread(Aln,s_alns,chrom):
 		right = alns[i+1] # "right" aln on query
 
 		# skip if not on same strand or chromosome or if mapped positions overlap
-		if (left.strand != right.strand 
-			or left.chrom != right.chrom
+		if (left.chrom != right.chrom
 			or  list(set(range(left.lpos,left.rpos+1)) & set(range(right.lpos,right.rpos+1)))
 			): 
 				continue
 						
+		if left.strand == right.strand:
 		# checking if deletion or duplication:
-		breakpoint_start, breakpoint_end = left.rpos, right.lpos
-		svtype='DEL'
-		if left.lpos > right.rpos:
-			breakpoint_start, breakpoint_end = right.lpos, left.rpos
-			svtype = 'DUP'
+			breakpoint_start, breakpoint_end = left.rpos, right.lpos
+			svtype = 'DEL'
+			if left.lpos > right.rpos:
+				breakpoint_start, breakpoint_end = right.lpos, left.rpos
+				svtype = 'DUP'
 
-		breaks.append( (chrom,breakpoint_start,breakpoint_end,svtype) )
+		elif left.strand != right.strand:
+			svtype = 'INV'
+			breakpoint_start, breakpoint_end = left.rpos, right.rpos
+			if Aln.mate_is_reverse:
+				breakpoint_start, breakpoint_end = left.lpos, right.lpos
+
+		breaks.append( (chrom,breakpoint_start,breakpoint_end,svtype,'SR') )
 
 	return breaks
