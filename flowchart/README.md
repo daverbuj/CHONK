@@ -30,7 +30,7 @@ This step will perform the following steps:
 > using the lengths of the chromosomes, make a temporary BED file of the starts and ends of the chromosomes 
 and subtract the excluded regions from them
 
-> with the new "un-excluded" regions, retain regions >10kb and window them 100bp and 1kbp sliding windows
+> with the new "un-excluded" regions, retain regions >10kb and window them 25bp and 1kbp sliding windows
 
 > calculate the GC content of the bins and save them to a temporary file
 
@@ -40,7 +40,7 @@ and subtract the excluded regions from them
 
 > calculate the mean coverage and standard deviation for each chromosome
 
-> calculate the mean coverage and standard deviation for each windowed region (100bp & 1kbp) with respect to GC content
+> calculate the mean coverage and standard deviation for each windowed region (25bp & 1kbp) with respect to GC content
 
 3. Template Length Metadata
 
@@ -82,8 +82,8 @@ can provide multiple JSON output files to genotype multiple samples.
     * Depth of Coverage (per chromosome)
       * mean coverage 
       * standard deviation
-      * mean coverage of 100bp windows binned by GC content
-      * standard deviation of 100bp windows binned by GC content
+      * mean coverage of 25bp windows binned by GC content
+      * standard deviation of 25bp windows binned by GC content
       * mean coverage of 1kbp windows binned by GC content
       * standard deviation of 1kbp windows binned by GC content
 
