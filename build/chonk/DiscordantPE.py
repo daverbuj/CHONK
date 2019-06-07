@@ -25,7 +25,6 @@ def discordantpe(Aln, meta, chrom):
 				svtype = 'DUP'
 				breakpoint_start = Aln.next_reference_start
 				breakpoint_end = Aln.reference_end
-			return (chrom, breakpoint_start, breakpoint_end, svtype, 'DPE')
 #		if dist < (float(med_mpd) - (3.5 * float(mad))):
 #				sv = 'INS'
 #				breakpoint_start = 
@@ -53,4 +52,6 @@ def discordantpe(Aln, meta, chrom):
 				else:
 					breakpoint_start = Aln.next_reference_start
 					breakpoint_end = Aln.reference_start
+
+	return (chrom, breakpoint_start, breakpoint_end, svtype, 'DPE')
 
