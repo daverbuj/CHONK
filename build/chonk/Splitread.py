@@ -16,7 +16,7 @@ def get_split(Aln=None):
 # main split-read function
 def splitread(Aln,s_alns,chrom):
 	# list of Alignment objects which are each alignment for a read
-	alns = [] 
+	alns = []
 	breaks=[]
 
 	# Alignment attributes for the primary alignment 
