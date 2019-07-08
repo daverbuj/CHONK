@@ -72,7 +72,7 @@ class Alignment():
 		cigartuple = get_cigartuples(sa_list[3])
 		# determine the right aligned position
 		self.rpos = get_rpos(cigartuple,self.lpos)
-		# determine the first alignmed position on query
+		# determine the first aligned position on query
 		self.qpos = get_qpos(cigartuple)
 
 

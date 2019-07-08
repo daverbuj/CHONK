@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+from chonk.Backend import tokenize_user_contigs
 from argparse import RawTextHelpFormatter
 import argparse,os,sys,json
 
-__version__='0.0.1'
+__version__='0.0.2'
 
 __usage__="""
 
@@ -31,7 +32,7 @@ optional arguments:
 
 """.format(__version__)
 
-class Argument():
+class Argument(object):
 
 	def __init__(self):
 		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=__usage__, add_help=False)
@@ -49,44 +50,55 @@ class Argument():
 		"""
 		_help = """
 
-    chonk metadata -i <bam> -e <mask> -f <fasta> -g <genome name> -r <chromosome> -o <output directory> -x <exclude region>
+    chonk metadata <-if> [-rxso]
+
+about: Compute metadata for SV calling 
+
+Required arguments:
+    -i        bam file
+    -f        fasta file
+
+Optional arguments:
+    -r        restrict to comma-separated list of contigs
+    -x        bed file of regions to exclude
+    -s        random seed [default: 42]
+    -o        output directory   
 		
 		"""
 		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=_help, add_help=False)
 		# bam file
 		parser.add_argument('-i',type=str, required=True,default=None)
-		# mask .bed file
-		parser.add_argument('-e',type=str, required=True,default=None)
 		# fasta
 		parser.add_argument('-f',type=str, required=True,default=None)
-		# genome name
-		parser.add_argument('-g',type=str, required=True,default=None)
-		# chromosome
+		# contigs
 		parser.add_argument('-r',type=str,required=False,default=None)
+		# mask .bed file
+		parser.add_argument('-x',type=str, required=False,default=None)
+		# random seed
+		parser.add_argument('-s',type=int, required=False,default=42) 
+		# output directory
 		parser.add_argument('-o',type=str,required=False,default=None)
 		parser.add_argument('-h', '-help', required=False, action="store_true", default=False)
 		args = parser.parse_args(sys.argv[2:])
+
+		## if help is defined, display usage and exit
 		if args.h == True:
 			sys.stderr.write(_help+'\n')
 			sys.exit(1)
-		if args.r == None:
-			args.r = ('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22')
-			r_label = 'all'
-		else:
-			args.r = (args.r,)
-			r_label = args.r
+		
+		## if the output directory is None, use the same directory as the BAM file
 		if args.o == None:
 			args.o = os.path.dirname(args.i)
-		elif not os.path.exists(args.o):
+		# add "/" to path if it does not end with "/""
+		if not args.o.endswith('/'): args.o += '/'
+		# make output directory if it does not exist
+		if not os.path.exists(args.o):
 			os.mkdir(args.o)
-			if args.o[-1] == '/':
-				args.o = args.o[:-1]
-		elif args.o[-1] == '/' and os.path.exists(args.o):
-			args.o = args.o[:-1]
-			#args.o = '{}.{}.metadata.chonk.json'.format(
-			#	args.i.replace('.bam','').replace('.sam','').replace('.cram',''),
-			#	r_label
-			#	)
+		
+		## split contigs into a tuple
+		if args.r !=None:
+			args.r = tokenize_user_contigs(args.r)
+
 		return args
 
 	def breakpoints(self):
@@ -96,47 +108,46 @@ class Argument():
 		"""
 		_help = """
 
-    chonk breakpoints -m <meta> -g <genome name> -r <chromosome> -o <output directory>
+	chonk breakpoints <-m> [-ro]
+
+about: Call SV breakpoints 
+
+Required arguments:
+    -m        metadata file
+
+Optional arguments:
+    -r        restrict to comma-separated list of contigs
+    -o        output directory
 
 		"""
 		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=_help, add_help=False)
-		# meta file
+		# metadata file
 		parser.add_argument('-m',type=str, required=True,default=None)
-		parser.add_argument('-g',type=str, required=True,default=None)
+		# contigs
 		parser.add_argument('-r',type=str,required=False,default=None)
+		# output directory
 		parser.add_argument('-o',type=str,required=False,default=None)
 		parser.add_argument('-h', '-help', required=False, action="store_true", default=False)
 		args = parser.parse_args(sys.argv[2:])
+
+		## if help is defined, display usage and exit
 		if args.h == True:
 			sys.stderr.write(_help+'\n')
 			sys.exit(1)
-		with open(args.m) as json_file:
-			data = json.load(json_file)
-			metadata = data[0]
-			meta_genome = metadata[0]
-			meta_chrom = metadata[1]
-			meta_bam = metadata[2]
-		if args.g != meta_genome:
-			sys.stderr.write('FATAL ERROR: metadata file does not contain genome '+args.g+' data'+'\n'+__usage__+'\n')
-			sys.exit(1)
-		if args.r == None:
-			args.r = ('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22')
-			r_label = 'all'
-		else:
-			args.r = (args.r,)
-			r_label = args.r
-		for input_chrom in args.r:
-			if not input_chrom in meta_chrom:
-				sys.stderr.write('FATAL ERROR: chromosome ('+input_chrom+') not in metadata\n'+__usage__+'\n')
-				sys.exit(1)
+
+		## if the output directory is None, use the same directory as the metadata file
 		if args.o == None:
-			args.o = os.path.dirname(meta_bam)
-		elif not os.path.exists(args.o):
+			args.o = os.path.dirname(args.m)
+		# add "/" to path if it does not end with "/"
+		if not args.o.endswith('/'): args.o += '/'
+		# make output directory if it does not exist
+		if not os.path.exists(args.o):
 			os.mkdir(args.o)
-			if args.o[-1] == '/':
-				args.o = args.o[:-1]
-		elif args.o[-1] == '/' and os.path.exists(args.o):
-			args.o = args.o[:-1]
+
+		## split contigs into a tuple
+		if args.r != None:
+			args.r = tokenize_user_contigs(args.r)
+		
 		return args
 
 	def features(self):
@@ -145,29 +156,47 @@ class Argument():
 		"""
 		_help = """
 
-    chonk features -i <bam> -e <mask> -f <fasta> -g <genome name> -r <chromosome> -o <output prefix>
+	chonk features <-mb> [-ro]
+
+about: Call SV breakpoints 
+
+Required arguments:
+    -m        metadata file
+    -b        breakpoint file
+
+Optional arguments:
+    -r        restrict to comma-separated list of contigs
+    -o        output directory
 		
 		"""
 		parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, usage=_help, add_help=False)
-		# bam file
-		parser.add_argument('-i',type=str, required=True,default=None)
-		# mask .bed file
-		parser.add_argument('-e',type=str, required=True,default=None)
-		# fasta
-		parser.add_argument('-f',type=str, required=True,default=None)
-		# genome name
-		parser.add_argument('-g',type=str, required=True,default=None)
-		# chromosome
-		parser.add_argument('-r',type=str,required=True,default=None)
+		# metadata file
+		parser.add_argument('-m',type=str, required=True,default=None)
+		# breakpoint file
+		parser.add_argument('-b',type=str, required=True,default=None)
+		# contigs
+		parser.add_argument('-r',type=str,required=False,default=None)
+		# output directory
 		parser.add_argument('-o',type=str,required=False,default=None)
 		parser.add_argument('-h', '-help', required=False, action="store_true", default=False)
 		args = parser.parse_args(sys.argv[2:])
+
+		## if help is defined, display usage and exit
 		if args.h == True:
 			sys.stderr.write(_help+'\n')
 			sys.exit(1)
+
+		## if the output directory is None, use the same directory as the breakpoint file
 		if args.o == None:
-			args.o = '{}.{}.metadata.chonk.json'.format(
-				args.i.replace('.bam','').replace('.sam','').replace('.cram',''),
-				args.r
-				)
+			args.o = os.path.dirname(args.b)
+		# add "/" to path if it does not end with "/"
+		if not args.o.endswith('/'): args.o += '/'
+		# make output directory if it does not exist
+		if not os.path.exists(args.o):
+			os.mkdir(args.o)
+
+		## split contigs into a tuple
+		if args.r != None:
+			args.r = tokenize_user_contigs(args.r)
+
 		return args

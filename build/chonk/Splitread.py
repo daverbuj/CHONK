@@ -2,7 +2,6 @@
 from chonk.Alignment import Alignment
 import operator, pysam
 
-# class of split-aln
 
 def get_split(Aln=None):
     # returns a list of secondary alignments
@@ -17,7 +16,7 @@ def get_split(Aln=None):
 def splitread(Aln,s_alns,chrom):
 	# list of Alignment objects which are each alignment for a read
 	alns = []
-	breaks=[]
+	breaks = []
 
 	# Alignment attributes for the primary alignment 
 	paln = Alignment()
@@ -61,12 +60,15 @@ def splitread(Aln,s_alns,chrom):
 				breakpoint_start, breakpoint_end = right.lpos, left.rpos
 				svtype = 'DUP'
 
+		# checking if inversion
 		elif left.strand != right.strand:
 			svtype = 'INV'
 			breakpoint_start, breakpoint_end = left.rpos, right.rpos
 			if Aln.mate_is_reverse:
 				breakpoint_start, breakpoint_end = left.lpos, right.lpos
+			if breakpoint_start > breakpoint_end:
+				breakpoint_start, breakpoint_end = breakpoint_end, breakpoint_start
 
-		breaks.append( (chrom,breakpoint_start,breakpoint_end,svtype,'SR') )
+		breaks.append( (chrom,breakpoint_start,breakpoint_end,svtype) )
 
 	return breaks
