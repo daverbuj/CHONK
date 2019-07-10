@@ -123,7 +123,7 @@ class Metadata(object):
 
 
 		# remove tmpdir
-		sp.check_output("rm -rf "+self.tmpdir, shell = True)
+		#sp.call("rm -rf "+self.tmpdir, shell = True)
 
 	def read_json(self,json_file):
 		# load metadata object from a json file
@@ -173,7 +173,7 @@ def init_mask(Bam,exclude,Meta):
 	# make bed file of just contigs and lengths
 	contig_bed = Meta.tmpdir + "contigs.bed"
 	contig_bed_fh = open(contig_bed,'wt')
-	contig_bed_writer = csv.writer(contig_bed_fh,delimiter='\t')
+	contig_bed_writer = csv.writer(contig_bed_fh, delimiter = '\t', lineterminator='\n')
 	for i,e in enumerate(Bam.bam.references):
 		# only output contigs the user defined
 		if e in Meta.user_contigs:
@@ -186,11 +186,11 @@ def init_mask(Bam,exclude,Meta):
 		
 		# if the user defined an exclude file, subtract the mask from the genome
 		subtract_cmd = "bedtools subtract -a {} -b {} > {}".format(contig_bed, os.path.abspath(exclude), mask)
-		sp.check_output(subtract_cmd, shell = True)
+		sp.call(subtract_cmd, shell = True)
 		filtered_mask = mask.replace('.bed','.gt10kb.bed')
 		# * Filter out regions smaller than 10kb
 		filter_cmd = """awk 'BEGIN {OFS="\t"}; $3 - $2 >= 10000 {print $1, $2, $3}' """ + mask + ' > ' + filtered_mask
-		sp.check_output(filter_cmd, shell = True)
+		sp.call(filter_cmd, shell = True)
 		mask=filtered_mask
 
 	with open(mask,'r') as file_handle:
@@ -212,12 +212,12 @@ def window_mask(mask,fasta,tmpdir,window_lengths):
 
 		# make windows using a 20bp step
 		win_cmd = "bedtools makewindows -w {} -s 20 -b {} > {}".format(wlen, mask, window_bed)
-		sp.check_output(win_cmd, shell = True)
+		sp.call(win_cmd, shell = True)
 
 		# * Get GC content for each window
 		gc_bed = window_bed.replace('.bed','.gc.bed')
 		gc_cmd = "bedtools nuc -fi {} -bed {} | cut -f 1-3,5 > {}".format(os.path.abspath(fasta), window_bed, gc_bed)
-		sp.check_output(gc_cmd, shell = True)
+		sp.call(gc_cmd, shell = True)
 
 		windowed[wlen] = gc_bed
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import math, os, sys 
+import math, os, sys, subprocess as sp
 """
 backend functions
 """
@@ -20,6 +20,24 @@ def check_chrom(contig,flag):
 	if 'chr' in contig and flag==False: contig=contig.replace('chr','')
 	if 'chr' not in contig and flag==True: contig='chr'+contig
 	return contig
+
+def get_gc_perc(fasta, window_size, contig, start, end):
+	gc = 0
+	win_size = 0
+	region = '{}:{}-{}'.format(contig, start, end)
+	# get the sequence of the region selected
+	fasta_cmd = 'samtools faidx {} {}'.format(fasta, region)
+	sequence_raw = sp.check_output(fasta_cmd, shell = True)
+	sequence_raw = sequence_raw.decode("utf-8")
+	region_fasta = '>'+region
+	sequence = sequence_raw.replace(region_fasta,'').strip()
+	# count up the number of g's and c's in the sequence
+	for base in sequence:
+		win_size += 1
+		if base == 'G' or base == 'C':
+			gc += 1
+	gc_perc = gc / window_size
+	return gc_perc
 
 def get_gc_bin(gc_content):
 	# takes the gc content as a decimal as input (example 0.3454)
@@ -49,15 +67,51 @@ def tokenize_user_contigs(r):
 def tuple2string(t):
 	return ','.join(map(str,(t)))
 
-def avg(x):
-	x_sum = 0
-	x_count = 0
-	for num in x:
+# find mean of a list excluding Nones
+def mean(lst):
+	lst_sum = 0
+	lst_count = 0
+	for num in lst:
 		if num == None: continue
-		x_sum += x
-		x_count += 1
-	return (x_sum / x_count)
+		lst_sum += num
+		lst_count += 1
+	return (lst_sum / lst_count)
 
+# find median of a list excluding Nones
+def median(lst):
+	newLst = []
+	for num in lst:
+		if num != None:
+			newLst.append(num)
+	sortedLst = sorted(newLst)
+	lstLen = len(newLst)
+	index = (lstLen - 1) // 2
+	if (lstLen % 2):
+		return sortedLst[index]
+	else:
+		return (sortedLst[index] + sortedLst[index + 1])/2.0
+
+# deprecated since recursion was close to causing a stack overflow in some cases
+'''def create_windows(window_size, start, end, windows = []):
+	# returns a list of tuples with start and end values for each window in the region
+	if (end - start) >= window_size:
+		win_end = start + (window_size-1)
+		win = (start, win_end)
+		windows.append(win)
+		return create_windows(window_size, win_end +1, end, windows)
+	else:
+		return windows'''
+
+def create_windows(window_size, start, end):
+    # 0-based I believe
+    windows = []
+    tmp_start = start
+    tmp_end = start + (window_size-1)
+    for x in range( int( (end-start)/window_size ) ):
+        windows.append( (tmp_start, tmp_end) )
+        tmp_start = tmp_end + 1
+        tmp_end = tmp_start + (window_size-1)
+    return windows
 
 class Welford(object):
 	""" 

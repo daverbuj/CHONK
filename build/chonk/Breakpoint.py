@@ -77,7 +77,6 @@ def selected_contigs(selected_contigs, available_contigs, AlnFile):
 
 	# ensure user-defined contigs are found in file
 	if selected_contigs != None:
-		print('sumn')
 		for c in selected_contigs:
 			# ensure contig name matches those of bam file
 			c = Backend.check_chrom(c, AlnFile.chrom_flag)
@@ -86,7 +85,7 @@ def selected_contigs(selected_contigs, available_contigs, AlnFile):
 				sys.stderr.write('FATAL ERROR: contig {} not extracted to metadata file\n'.format(c))
 				sys.exit(1)
 			else:
-				contigs+=(c,)
+				contigs += (c,)
 	else: 
 		# if the user did not specify contigs, use the contigs available in the meta file
 		contigs = available_contigs
