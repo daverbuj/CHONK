@@ -1,3 +1,53 @@
+# Performance
+-------------
+
+1. SVTYPE:
+* DEL 
+* DUP
+* INV
+
+2. Feature Class
+* SF
+* COV
+* Kmers
+* SF + COV + Kmers 
+
+3. Training Sets
+* Platinum
+* Polaris
+* AJ Trio
+* All 
+
+For 1. 2. 3. you will do the X-fold Cross Validation and report the results
+
+--------------------------
+# Performance of SV Length
+--------------------------
+
+You will not do Cross Validation, instead split the data into two parts. You
+can use the StratifiedFold object but split into 2
+
+Train on one part and predict on the test set, then record performance at these
+different SV lengths
+
+* 50-100bp
+* 101-250bp
+* 251-500bp
+* 500-1kbp
+* >1kbp 
+
+----------------------------
+# Performance of Somatic SV
+----------------------------
+
+GOAL: be better than random at this point
+
+* TODO: set up some mixing experiments
+* TODO: run bsm pipeline on that sample. 
+
+
+
+
 # CHONK_functions
 ----------------------
 
