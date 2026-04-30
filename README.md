@@ -1,257 +1,384 @@
-# Performance
--------------
+# CHONK
 
-1. SVTYPE:
-* DEL 
-* DUP
-* INV
+**CHONK** is a machine learning–based tool for detecting and genotyping germline structural variants (GSVs) and calling somatic structural variants (SSVs) from short-read paired-end whole-genome sequencing data. It classifies deletions (DEL), tandem duplications (DUP), and inversions (INV), and is uniquely designed to identify SSVs in bulk (non-tumor) tissue at allele frequencies as low as 1%.
 
-2. Feature Class
-* SF
-* COV
-* Kmers
-* SF + COV + Kmers 
+> Masters thesis — San Diego State University, 2020
+> Author: Dan Averbuj
 
-3. Training Sets
-* Platinum
-* Polaris
-* AJ Trio
-* All 
+---
 
-For 1. 2. 3. you will do the X-fold Cross Validation and report the results
+## Table of Contents
 
---------------------------
-# Performance of SV Length
---------------------------
+- [Background](#background)
+- [Overview](#overview)
+- [Pipeline](#pipeline)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [1. metadata](#1-metadata)
+  - [2. breakpoints](#2-breakpoints)
+  - [3. features](#3-features)
+- [Feature Description](#feature-description)
+- [Performance](#performance)
+- [Training Data](#training-data)
+- [Dependencies](#dependencies)
+- [Project Structure](#project-structure)
+- [References](#references)
 
-You will not do Cross Validation, instead split the data into two parts. You
-can use the StratifiedFold object but split into 2
+---
 
-Train on one part and predict on the test set, then record performance at these
-different SV lengths
+## Background
 
-* 50-100bp
-* 101-250bp
-* 251-500bp
-* 500-1kbp
-* >1kbp 
+Structural variants (SVs) — genomic mutations larger than 50 bp — alter copy number, break or fuse genes, and change gene regulation. They contribute to 0.5–1% of heritable differences between individuals and are implicated in autism, schizophrenia, rare developmental disorders, and cancer.
 
-----------------------------
-# Performance of Somatic SV
-----------------------------
+Somatic SVs (SSVs) arise post-zygotically and are present only in a subset of cells. Because their allele frequency is far below that of germline variants (typically below 25%), they produce a weaker signal and are far harder to detect reliably. Existing callers are limited to tumor cells, microarray resolution, or small variant classes. CHONK is the first tool designed for unbiased SSV detection in bulk WGS using short-read paired-end sequencing, operating at allele frequencies down to 1%.
 
-GOAL: be better than random at this point
+---
 
-* TODO: set up some mixing experiments
-* TODO: run bsm pipeline on that sample. 
+## Overview
 
-
-
-
-# CHONK_functions
-----------------------
-
-## Training Set: 
-
-### Alignments
-
-You can work with the platinum genomes from the 1000Genomes project. This was the training set I used for my analysis.
-
-They will be in this location
-
-`/projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/`
-
-* GRCh37 (hg19)
-* 27 samples with SV calls
-* PCR-free 
-* 250bp reads
-* 500bp insert size
-* ~50X Coverage
-
-[Ethnic groups](http://www.internationalgenome.org/category/population/):
-```
-ACB ASW BEB CDX 
-CEU CHB CHS CLM 
-ESN FIN GBR GIH 
-GWD IBS ITU JPT 
-KHV LWK MSL MXL 
-PEL PJL PUR STU 
-TSI YRI
-```
-
-### SV calls
-
-Phase 3 SV calls from 2,504 low-coverage genomes ([Sudmant et al. 2015](https://www.nature.com/articles/nature15394))
-```
-/projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/platinumgenomes.del.bed  
-/projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/platinumgenomes.dup.bed
-
-/projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/platinumgenomes.sv.v8.vcf
-```
-
-In the BED files: 
-* 0-base
-* The genotypes will be your training labels
-  * 0|0 = 0
-  * 0/1 (1/0) = 1
-  * 1/1 = 2
-* for now, just focus on chr1-22 (autosomes) 
-
-From the README:
-```
-Here are some basic statistics about the structural variant call set.
-
-samples: 2504
-records: 68818
-
-ALUs: 12748
-LINE1s: 3048
-SVAs: 835
-DELs: 40975
-DEL_ALUs: 1238
-DEL_LINE1s: 56
-DEL_SVAs: 9
-DEL_HERVs: 1
-DUPs: 6025
-CNVs: 2929
-INVs: 786
-INSs: 168
-
-All male genotypes are unknown on chrX for the union deletions
- because the genotype encoding was not picked up correctly by the phasing
- software. Please refer to the unphased union deletion genotypes for chrX
- where 0/1 encodes copy-number 1 and 1/1 encodes copy-number 0. The unphased
- union deletions are available here:
- ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130723_phase3_wg/union_gls/ALL.wgs.phase3_dels_merged_genome_strip.20130502.dels.low_coverage.genotypes.vcf.gz
-```
-
-------------
-
-## Features
-[Medvedev et al. 2009](https://www.nature.com/articles/nmeth.1374)
-[Alkan et al. 2011](https://www.nature.com/articles/nrg2958)
-
-### Depth of Coverage
-
-Papers:
-
-[CNVnator: Abyzov et al. 2011](https://genome.cshlp.org/content/21/6/974.short)
-[Duphold: Pedersen et al. 2018](https://www.biorxiv.org/content/early/2018/11/08/465385.full.pdf)
-
-#### Features
-
-The first three features are taken from the duphold program. If you can install it, you can compare your estimates with dupold. 
-
-* doc_fc
-  * fold-change for the variant depth relative to the rest of the chromosome the variant was found on
-  * chromosome doc:
-    * determine the average read length (you can do this once) = *L*
-    * count the reads (readname + mate_1 similar to your split-read code) = *N*
-    * count the number of base-pairs you scan = *G*
-    * chromosome doc = *L* X *N* / *G* 
-  * SV doc:
-    * same thing, but now you just do the SV region. You don't have to recalculate the average read length  
-    * `for Aln in bam.fetch(reference=chrom, start=SV_start, end=SV_end): read_length.append(Aln.reference_length)`
-    * SV doc = *L* X *N* / *SV length*
-  * doc_fc = SV doc / chromosome doc
-  
-* doc_gc
-  * fold-change for the variant depth relative to bins in the genome with similar GC-content.
-  * bins sizes: 100bp, 500bp, 1kbp
-  * in the same regions for the null distribution in `doc_fc`, now determine the doc for 500-1000 bins at different GC context
-  * for example, chr1:1-500 , 0.62 GC; doc=0.8. then for all bins at 0.62GC, calculate the median (mean and check if different) 
-    * this median/mean DoC at specific GC context will be used, and save it to a file 
-    * do this for each chromosome
-  * doc_gc = SV_doc  / median doc of the bin with the same GC context (so if the SV has 0.42 GC, you use the 0.42 GC bin) 
-  
-* doc_flank
-  * fold-change for the variant depth relative to flanking regions.
-  * 500bp, 1kbp, 5kbp. I think 1kbp would be good. 
-
-For the MAD features, calculate the "control" coverage in the same bin size. 
-
-MAD = median( abs(median of all bins - each bin depth) ) 
-MAD = median ( (10-5, 10-8, 10-11, 10-12) )
+CHONK implements a five-stage pipeline:
 
 ```
-numpy.median([5,2,1,2])
-2.0
+BAM + FASTA
+     │
+     ▼
+┌──────────┐     ┌────────────────┐     ┌──────────────────┐
+│ metadata │────▶│  breakpoints   │────▶│    features      │
+│          │     │                │     │                  │
+│ DOC, GC  │     │ split-read     │     │ coverage, SR/DPE,│
+│ insert   │     │ discordant PE  │     │ k-mers, context, │
+│ lengths  │     │                │     │ repeat overlap   │
+└──────────┘     └────────────────┘     └──────────────────┘
+   .json            .bed (SVs)          .DEL.txt / .DUP.txt
+                                        .INV.txt
+                                             │
+                                             ▼
+                                    ┌─────────────────┐     ┌──────────────────┐
+                                    │    genotype     │────▶│     somatic      │
+                                    │                 │     │                  │
+                                    │ RF classifier   │     │ RF classifier    │
+                                    │ GSV genotyping  │     │ SSV calling      │
+                                    │ (6 models)      │     │ (6 models)       │
+                                    └─────────────────┘     └──────────────────┘
+                                     .vcf (GSVs ≥80%)        .vcf (SSVs ≥50%)
 ```
-* doc_mad
-  * fold-change for the variant median absolute deviation (MAD) of depth relative to the MAD for the rest of the chromosome
-  * keep the same bin size as the bins you use for GC content.
-  * also bin the SV in question. 
-  * trick: you have already calculated the binned coverage making the control for the GC bins
-    * for `doc_mad` you can just calculate the MAD for all GC bins for a chromosome
-* doc_mad_gc
-  * fold-change for the variant MAD of depth to bins in the genome with similar GC-content
 
-#### Defintions
+Stages 1–3 (this repository) form the preprocessing pipeline: metadata extraction, breakpoint detection, and feature extraction. Stages 4–5 apply trained random forest classifiers to genotype GSVs and call SSVs; each stage uses six independent models stratified by SV type (DEL / DUP / INV) and size (small < 1 kb / large ≥ 1 kb).
 
-* depth of coverage:
-  * *number_of_reads* * *average_read_length* / *base-pairs parsed*
-  * for example. chr1:1-300 DEL. 20 reads * 150bp / 300bp = 10X
+The metadata step is expensive but only needs to be run once per sample.
 
-* (median absolute deviation)[https://en.wikipedia.org/wiki/Median_absolute_deviation]
+---
 
-* fold-change
-  * take the depth of coverage of the variant and divide it by the chromosome or bins
+## Pipeline
 
-* GC-content: the fraction of GC nucleotides for a given region, like 0.65 
+### Stage 1 — metadata
 
-* bins
-  * experiment with bin sizes. read the methods of CNVnator. Recommend 100bp, 500bp, or 1kbp
+Scans the BAM file through copy-number-neutral regions to compute:
 
-* flank
-  * experiment with flanking sizes: 500bp or 1kbp
+- Per-chromosome **depth of coverage** (DOC), mean read length, and insert-length statistics (mean ± std) via Welford's online algorithm
+- A **GC-bin null model**: mean and std of read counts in 25 bp and 1 kb windows, binned by GC content at 4 percentage-point intervals, used to normalise coverage features in the absence of structural variation
 
-#### Tips
+Results are saved to a JSON file reused by all subsequent stages.
 
-To calculate GC content, use the `bedtools nuc` command or use `samtools faidx` and count it yourself (the latter is likely to be faster)
+### Stage 2 — breakpoints
 
-The command below makes 100bp windows. You only have to do this once and then you can make another file with the chrom:start-end and the GC content 
+Traverses the BAM file and detects SV breakpoints using two complementary signals:
+
+| Signal | Description |
+|--------|-------------|
+| **Split reads (SR)** | Reads with an SA tag spanning two positions; strand orientation determines SV type: same strand → DEL or DUP; opposite strands → INV. Provides single-base-pair breakpoint resolution. |
+| **Discordant paired ends (DPE)** | Read pairs with insert length > μ + 3.5σ, or with unexpected strand orientation. Opposite-strand → DEL/DUP; same-strand → INV. |
+| **Clipped reads (CR)** | Soft-clipped reads lacking a secondary alignment. Used as supporting evidence in feature extraction but not for breakpoint calling. |
+
+Any single supporting alignment is sufficient to record a candidate SV, maximising sensitivity. Candidates are merged by 80% reciprocal overlap. Output is a BED file of candidate loci.
+
+### Stage 3 — features
+
+For each candidate SV, extracts four feature groups (63 features total):
+
+| Group | Features |
+|-------|----------|
+| **Coverage** (9) | Fold-change DOC for SV body, left flank, right flank; GC-normalised mean/std for each |
+| **Supporting fragments** (12) | Ratios of SR, DPE, and clipped fragments; mapping-quality and base-quality statistics for supporting and non-supporting reads |
+| **K-mer junction** (10 for DEL/DUP, 12 for INV) | Overlap of read k-mers with reference/alt junction k-mer sets; soft-clip pseudo-alignment ratios |
+| **Sequence context** (13) | GC content and sequence complexity for SV body, flanks, and CI regions; log SV length; CI width |
+| **Overlap** *(optional, 15)* | Fraction of each region overlapping repeat-masker, segmental-duplication, and STR annotations |
+
+Feature importance varies by SV type: k-mer features are most informative for DELs, coverage features for DUPs, and supporting-alignment features for INVs.
+
+### Stage 4 — genotype *(classifier, not in this repository)*
+
+Applies six random forest models (small/large × DEL/DUP/INV) trained on high-confidence GSV calls to predict genotype (0/0, 0/1, 1/1). SVs with prediction probability ≥ 0.8 are reported as GSVs in VCF format; those with probability < 0.8 are passed to stage 5 as potential SSVs.
+
+### Stage 5 — somatic *(classifier, not in this repository)*
+
+Applies six additional random forest models to classify poorly-genotyped SVs as somatic or not-somatic. Predicted SSVs with probability > 0.5 are reported in a VCF file.
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/dantaki/chonk.git
+cd chonk
+pip install .
 ```
-bedtools makewindows -w 100 -b /projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/cn2.regions.grch37.masked.bed >cn2.regions.grch37.masked.windowed100bp.bed
 
-bedtools nuc -fi /home/dantakli/ref/human_g1k_v37.fasta -bed cn2.regions.grch37.masked.windowed100bp.bed | cut -f 1-3,5 >cn2.regions.grch37.masked.windowed100bp.gc.bed
-```
-Make sure you round to 2 decimal places. 
+### System requirements
 
+- Python ≥ 3.6
+- [`samtools`](http://www.htslib.org/) (accessible in `$PATH`)
+- [`bedtools`](https://bedtools.readthedocs.io/) (accessible in `$PATH`)
 
+---
 
-You only need to calculate the chromosome coverage and binned coverage once. Save the data in a `metadata.txt` file that can be read when
-extracting features again. To make this step run faster, build the null distribution of coverage in regions that are intolerant to copy
-number variants. `/projects/ps-gleesonlab5/reference_panels/1kgp/platinumgenomes/cn2.regions.grch37.masked.bed`
+## Usage
 
-For the null model:
-  * chromosome depth of coverage
-  * average read length (pysam Aln.reference_length)
-  * chromosome MAD of coverage in bins
-  * median (or mean see if there is a significant difference) coverage in bins at different GC content
-  * MAD of coverage in bins at different GC content
-
-For the null model you should check the coverage only within regions intolerant to copy number change. 
-For you should try to have at least 500 bins at each GC content but no more than 1000 to save computation time.
-
-##### Exploring the Data
-
-You can make plots like histograms and look at the distribution of features with respect to genotype
-
-````
-doc    sample   geno
-1.2    HG000096  0/0
-0.5    HG000096  0/1
-0.01   HG000096  1/1
-````
+### 1. metadata
 
 ```
-import seaborn as sns
-import pandas as pd
-df = pd.read_table("...")
-sns.violinplot(y="doc",x="geno",data=df) 
+chonk metadata -i BAM -f FASTA [-r CONTIGS] [-x EXCLUDE] [-s SEED] [-o OUTDIR]
 ```
-https://seaborn.pydata.org/api.html#categorical-plots
 
-Look at the doc_gc distribution with respect to SV length and bin size 
+| Argument | Description |
+|----------|-------------|
+| `-i` | BAM alignment file (must be indexed) |
+| `-f` | Reference FASTA (must be indexed with `samtools faidx`) |
+| `-r` | Comma-separated list of contigs to process (default: all) |
+| `-x` | BED file of regions to exclude (e.g. repetitive / self-chaining regions) |
+| `-s` | Random seed for region sampling (default: 42) |
+| `-o` | Output directory (default: same directory as the BAM file) |
 
+**Output:** `<sample>_metadata.chonk.json`
 
+**Example:**
+```bash
+chonk metadata \
+  -i HG00096.bam \
+  -f human_g1k_v37.fasta \
+  -x cn2.regions.grch37.masked.bed \
+  -o metadata/
+```
+
+> **Tip:** Providing a copy-number-neutral mask (`-x`) substantially reduces runtime by restricting sampling to stable diploid regions.
+
+---
+
+### 2. breakpoints
+
+```
+chonk breakpoints -m METADATA [-r CONTIGS] [-o OUTDIR]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `-m` | Metadata JSON from `chonk metadata` |
+| `-r` | Comma-separated list of contigs (default: all in metadata) |
+| `-o` | Output directory (default: same directory as metadata file) |
+
+**Output:** `<sample>_breakpoints.chonk.bed`
+
+**Example:**
+```bash
+chonk breakpoints \
+  -m metadata/HG00096_metadata.chonk.json \
+  -o breakpoints/
+```
+
+---
+
+### 3. features
+
+```
+chonk features -bp BED -metadir DIR -fasta FASTA \
+               -k K -rlen RLEN -pk PK -o OUT \
+               [-rm RM_BED] [-sd SD_BED] [-str STR_BED]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `-bp` | Breakpoint BED file (`chrom start end svtype cipos ciend iid gt`) |
+| `-metadir` | Directory of per-sample metadata JSON files |
+| `-fasta` | Reference FASTA file |
+| `-k` | K-mer size for junction features (e.g. `20`) |
+| `-rlen` | Read-length modifier, float (e.g. `1.0`) |
+| `-pk` | K-mer size for pseudo-alignment features (e.g. `15`) |
+| `-o` | Output file prefix (must end in `.txt`) |
+| `-rm` | *(optional)* Repeat-masker merged BED |
+| `-sd` | *(optional)* Segmental-duplication merged BED |
+| `-str` | *(optional)* Short tandem repeat merged BED |
+
+**Output:** `<prefix>.DEL.txt`, `<prefix>.DUP.txt`, `<prefix>.INV.txt`
+(If all three overlap tracks are provided, final output is `<prefix>.DEL.final.txt`, etc.)
+
+**Example:**
+```bash
+chonk features \
+  -bp breakpoints/HG00096_breakpoints.chonk.bed \
+  -metadir metadata/ \
+  -fasta human_g1k_v37.fasta \
+  -k 20 -rlen 1.0 -pk 15 \
+  -o features/output.txt \
+  -rm hg19_repeatmasker_merged.bed \
+  -sd hg19_segdup_merged.bed \
+  -str hg19_str_merged.bed
+```
+
+---
+
+## Feature Description
+
+### Coverage features (9)
+
+| Feature | Description |
+|---------|-------------|
+| `sv_doc_fc` | SV body DOC / chromosome DOC |
+| `sv_gc_mean` | Mean GC-normalised read-count fold-change across SV windows |
+| `sv_gc_std` | Std of above |
+| `lf_doc_fc` | Left-flank DOC fold-change (1 kb) |
+| `lf_gc_mean` | Left-flank GC-normalised fold-change mean |
+| `lf_gc_std` | Left-flank GC-normalised fold-change std |
+| `rf_doc_fc` | Right-flank DOC fold-change (1 kb) |
+| `rf_gc_mean` | Right-flank GC-normalised fold-change mean |
+| `rf_gc_std` | Right-flank GC-normalised fold-change std |
+
+### Supporting fragment features (12)
+
+| Feature | Description |
+|---------|-------------|
+| `sf_ratio` | Fraction of all fragments that are supporting (SR + DPE + clip) |
+| `split_ratio` | Fraction that are split-read supporting |
+| `disc_ratio` | Fraction that are discordant PE supporting |
+| `clip_ratio` | Fraction that are soft-clipped supporting |
+| `sf_mapq_mean/median` | Mapping quality of supporting fragments |
+| `nonsf_mapq_mean/median` | Mapping quality of non-supporting fragments |
+| `sf_baseq_mean/median` | Base quality of supporting fragments |
+| `nonsf_baseq_mean/median` | Base quality of non-supporting fragments |
+
+### K-mer features (10 for DEL/DUP, 12 for INV)
+
+| Feature | Description |
+|---------|-------------|
+| `ll`, `lr`, `la` | Left-window reads vs. left-ref, right-ref, alt k-mers |
+| `rl`, `rr`, `ra` | Right-window reads vs. left-ref, right-ref, alt k-mers |
+| `start_ratio_left/right` | Soft-clip k-mers at SV start vs. left/right ref |
+| `end_ratio_left/right` | Soft-clip k-mers at SV end vs. left/right ref |
+
+### Sequence context features (13)
+
+| Feature | Description |
+|---------|-------------|
+| `sv_gc`, `lf_gc`, `rf_gc`, `lo_gc`, `ro_gc` | GC fraction of body, flanks, CI regions |
+| `sv_comp`, `lf_comp`, `rf_comp`, `lo_comp`, `ro_comp` | Sequence complexity (zlib-compressed / raw length ratio) |
+| `log_sv_len` | log₁₀(SV length) |
+| `bp_start_ci`, `bp_end_ci` | Confidence-interval width / read length |
+
+### Overlap features (15, optional)
+
+Fraction of each region (body, left/right flank, left/right CI) overlapping:
+`*_rm` (repeat masker), `*_sd` (segmental duplication), `*_str` (short tandem repeats)
+
+---
+
+## Performance
+
+Preliminary results were evaluated on the Polaris cohort using the germline (GSV) and somatic (SSV) classifiers. Note that context-based features were not yet included in these runs, and results are expected to improve with full feature sets and larger training data.
+
+### Germline genotyping (GSV)
+
+Random forest outperformed all other classifiers tested on all three SV types:
+
+| SV type | F1 score |
+|---------|----------|
+| DEL     | 82%      |
+| DUP     | 75%      |
+| INV     | 93%      |
+
+### Somatic calling (SSV)
+
+| Metric | Value |
+|--------|-------|
+| Sensitivity | 70% |
+| False discovery rate | 5% |
+| SVs correctly identified | 9 / 13 |
+| Detectable allele frequency range | 1% – 25% |
+
+The `sf_ratio` (supporting fragment ratio) feature is a strong predictor of allele frequency.
+
+---
+
+## Training Data
+
+### Germline classifier
+
+Trained on three cohorts processed through LUMPY and Manta for SV calling, then filtered by a **consensus + Mendelian expectation** approach:
+- Genotypes were determined by consensus of four independent genotypers: DELLY, SVTyper, SV2, and Paragraph.
+- Only SVs consistent with Mendelian inheritance within each trio were retained.
+
+| Cohort | Description |
+|--------|-------------|
+| Polaris | Public WGS trios |
+| HGSV | Human Genome Structural Variation Consortium trios (pre-existing callset) |
+| PTCD | Pontine Tegmental Cap Dysplasia internal trio dataset |
+
+### Somatic classifier
+
+Trained using **digital and physical spike-in mixtures** of known GSVs to simulate SSVs at controlled allele frequencies. Labels (true positive / false positive) were assigned by checking overlap with the mixture's known variant set and re-genotyping with CHONK.
+
+| Cohort / Mixture | Type | Coverage | AF range |
+|-----------------|------|----------|----------|
+| Polaris + PTCD (12 children downsampled and mixed) | Digital | 196× | 1–50% |
+| GIAB Ashkenazi Jewish trio (two parents mixed) | Digital | 250× | 1.25–50% |
+| BSMN physical spike-in (Platinum + HGSV + controls) | Physical | — | ~0.1–2% and 32–68% |
+
+---
+
+## Dependencies
+
+| Package | Use |
+|---------|-----|
+| `pysam` | BAM file access |
+| `numpy` | Numerical aggregation |
+| `scikit-learn` | Random forest classifiers (genotype / somatic stages) |
+| `samtools` | FASTA sequence extraction |
+| `bedtools` | Window generation, GC annotation, BED intersection |
+
+---
+
+## Project Structure
+
+```
+chonk/                     # Installable Python package
+├── __init__.py
+├── cli.py                 # Entry point and argument parsing
+├── bam.py                 # BAM file access (BamFile class)
+├── alignment.py           # Split-read alignment data structures
+├── metadata.py            # Metadata extraction (Metadata class + pipeline)
+├── breakpoints.py         # SV breakpoint detection
+├── utils.py               # Welford, GC utilities, shared helpers
+└── features/
+    ├── coverage.py        # Depth-of-coverage features
+    ├── fragments.py       # Supporting fragment features (Fragment class)
+    ├── kmers.py           # K-mer junction and pseudo-alignment features
+    ├── context.py         # Sequence context features
+    ├── overlap.py         # Repeat-element overlap features
+    └── extract.py         # Feature extraction pipeline orchestrator
+setup.py
+```
+
+---
+
+## References
+
+- Sudmant et al. (2015). An integrated map of structural variation in 2,504 human genomes. *Nature*. [doi:10.1038/nature15394](https://doi.org/10.1038/nature15394)
+- Antaki, Brandler & Sebat (2018). SV2: Accurate structural variation genotyping and de novo mutation detection from whole genomes. *Bioinformatics*. [doi:10.1093/bioinformatics/bty054](https://doi.org/10.1093/bioinformatics/bty054)
+- Layer et al. (2014). LUMPY: A probabilistic framework for structural variant discovery. *Genome Biology*. [doi:10.1186/gb-2014-15-6-r84](https://doi.org/10.1186/gb-2014-15-6-r84)
+- Chen et al. (2016). Manta: Rapid detection of structural variants and indels for germline and cancer sequencing applications. *Bioinformatics*. [doi:10.1093/bioinformatics/btv710](https://doi.org/10.1093/bioinformatics/btv710)
+- Rausch et al. (2012). DELLY: Structural variant discovery by integrated paired-end and split-read analysis. *Bioinformatics*. [doi:10.1093/bioinformatics/bts378](https://doi.org/10.1093/bioinformatics/bts378)
+- Chiang et al. (2015). SpeedSeq: Ultra-fast personal genome analysis and interpretation. *Nature Methods*. [doi:10.1038/nmeth.3505](https://doi.org/10.1038/nmeth.3505)
+- Pedersen & Quinlan (2019). Duphold: scalable, depth-based annotation and curation of high-confidence structural variant calls. *GigaScience*. [doi:10.1093/gigascience/giz040](https://doi.org/10.1093/gigascience/giz040)
+- Chen et al. (2019). Paragraph: A graph-based structural variant genotyper for short-read sequence data. *bioRxiv*. [doi:10.1101/635011](https://doi.org/10.1101/635011)
+- Chaisson et al. (2019). Multi-platform discovery of haplotype-resolved structural variation in human genomes. *Nature Communications*. [doi:10.1038/s41467-018-08148-z](https://doi.org/10.1038/s41467-018-08148-z)
+- Varoquaux et al. (2015). Scikit-learn. *GetMobile*. [doi:10.1145/2786984.2786995](https://doi.org/10.1145/2786984.2786995)
+- D'Gama & Walsh (2018). Somatic mosaicism and neurodevelopmental disease. *Nature Neuroscience*. [doi:10.1038/s41593-018-0257-3](https://doi.org/10.1038/s41593-018-0257-3)
+- Medvedev et al. (2009). Computational methods for discovering structural variation. *Nature Methods*. [doi:10.1038/nmeth.1374](https://doi.org/10.1038/nmeth.1374)
