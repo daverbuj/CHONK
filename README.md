@@ -119,7 +119,7 @@ Applies six additional random forest models to classify poorly-genotyped SVs as 
 ## Installation
 
 ```bash
-git clone https://github.com/dantaki/chonk.git
+git clone https://github.com/daverbuj/chonk.git
 cd chonk
 pip install .
 ```
